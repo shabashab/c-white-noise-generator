@@ -3,31 +3,34 @@
 #include <time.h>
 #include <string.h>
 #include <assert.h>
+#include <stdint.h>
 
-int image_width       = 1000;
-int image_height      = 1000;
-int pixel_size        = 10;
+void create_image(size_t image_width, size_t image_height, size_t pixel_size, char *filename);
 
-void fill_pixel(int* pixels, int x, int y, int color);
+#define DEFAULT_IMAGE_WIDTH 1000;
+#define DEFAULT_IMAGE_HEIGHT 1000;
+#define DEFAULT_PIXEL_SIZE 10;
+#define DEFAULT_FILE_NAME "output.ppm";
 
-void write_pixels(FILE* file, int* pixels);
-
-int main(int argc, char** argv) 
+int main(int argc, char **argv)
 {
-  char* filename = "./noise.ppm";
+  size_t image_width = DEFAULT_IMAGE_WIDTH;
+  size_t image_height = DEFAULT_IMAGE_HEIGHT;
+  size_t pixel_size = DEFAULT_PIXEL_SIZE;
+  char *filename = DEFAULT_FILE_NAME;
 
-  for(int i = 1; i < argc; i++)
+  for (int i = 1; i < argc; i++)
   {
-    if(strcmp(argv[i], "-f") == 0)
+    if (strcmp(argv[i], "-f") == 0)
     {
       i++;
       assert(i < argc);
-      filename = (char*)malloc(strlen(argv[i]));
+      filename = (char *)malloc(strlen(argv[i]));
       strcpy(filename, argv[i]);
       continue;
     }
 
-    if(strcmp(argv[i], "-w") == 0)
+    if (strcmp(argv[i], "-w") == 0)
     {
       i++;
       assert(i < argc);
@@ -35,7 +38,7 @@ int main(int argc, char** argv)
       continue;
     }
 
-    if(strcmp(argv[i], "-h") == 0)
+    if (strcmp(argv[i], "-h") == 0)
     {
       i++;
       assert(i < argc);
@@ -43,7 +46,7 @@ int main(int argc, char** argv)
       continue;
     }
 
-    if(strcmp(argv[i], "-p") == 0)
+    if (strcmp(argv[i], "-p") == 0)
     {
       i++;
       assert(i < argc);
@@ -52,61 +55,49 @@ int main(int argc, char** argv)
     }
   }
 
-  FILE* file = fopen(filename, "w");
-
-  int h_pixels_count = image_width / pixel_size;
-  int v_pixels_count = image_height / pixel_size;
-
-  int* pixels = (int*)malloc(sizeof(int) * image_height * image_width);
-  printf("%d\n", image_height * image_width);
-
-  if(file == NULL) 
-  {
-    printf("An error occurred while opening the file");
-    exit(1);
-  }
-
-  fprintf(file, "P3\n");
-  fprintf(file, "%d %d\n255\n", image_width, image_height);
-
-  srand(time(NULL));
-
-  for(int x = 0; x < h_pixels_count; x++)
-  {
-    for(int y = 0; y < v_pixels_count; y++)
-    {
-      int color = rand() % 256;
-      fill_pixel(pixels, x * pixel_size, y * pixel_size, color);
-    }
-  }
-
-  write_pixels(file, pixels);
-
-  fclose(file);
+  create_image(image_width, image_height, pixel_size, filename);
 
   return 0;
 }
 
-void fill_pixel(int* pixels, int x, int y, int color)
+void create_image(size_t image_width, size_t image_height, size_t pixel_size, char *filename)
 {
-  int pixel_x, pixel_y;
+  FILE *file;
 
-  for(int x_iter = 0; x_iter < pixel_size; x_iter++)
+  if ((file = fopen(filename, "w")) == NULL)
   {
-    for(int y_iter = 0; y_iter < pixel_size; y_iter++)
-    {
-      pixel_x = x + x_iter;
-      pixel_y = y + y_iter;
-
-      pixels[(pixel_y * image_width) + pixel_x] = color;
-    }
+    printf("Can't open the file %s\n", filename);
+    exit(1);
   }
-}
 
-void write_pixels(FILE* file, int* pixels)
-{
-  for(int i = 0; i < image_width * image_height; i++)
-  {
-    fprintf(file, "%d %d %d\n", pixels[i], pixels[i], pixels[i]);
-  }
+  //Write header for ppm image file
+  fprintf(file, "P3\n");
+  fprintf(file, "%lu %lu\n255\n", image_width, image_height);
+
+  //Initialize pixels
+  int image_buffer_length = image_width * image_height;
+  uint8_t *image_buffer = (uint8_t *)malloc(sizeof(uint8_t) * image_buffer_length);
+
+  //Initialize data pixels
+  int pixels_count =
+      (image_height / pixel_size) * (image_width / pixel_size);
+  uint8_t *pixels = (uint8_t *)malloc(sizeof(uint8_t) * pixels_count);
+
+  //Initialize random nums generator
+  srand(time(NULL));
+
+  //Fill the array of data pixels
+  while (--pixels_count)
+    pixels[pixels_count] = rand() % 255;
+
+  //Fill the image buffer based on array of pixels
+  for (int x = 0; x < image_width; x++)
+    for (int y = 0; y < image_height; y++)
+      image_buffer[(y * image_width) + x] = pixels[((y / pixel_size) * (image_width / pixel_size)) + (x / pixel_size)];
+
+  //Write the image buffer to the file
+  for (int i = 0; i < image_buffer_length; i++)
+    fprintf(file, "%d %d %d\n", image_buffer[i], image_buffer[i], image_buffer[i]);
+
+  fclose(file);
 }
