@@ -4,8 +4,7 @@
 #include <string.h>
 #include <assert.h>
 #include <stdint.h>
-
-void create_image(size_t image_width, size_t image_height, size_t pixel_size, char *filename);
+#include "image.h"
 
 #define DEFAULT_IMAGE_WIDTH 1000;
 #define DEFAULT_IMAGE_HEIGHT 1000;
@@ -55,49 +54,17 @@ int main(int argc, char **argv)
     }
   }
 
-  create_image(image_width, image_height, pixel_size, filename);
-
-  return 0;
-}
-
-void create_image(size_t image_width, size_t image_height, size_t pixel_size, char *filename)
-{
-  FILE *file;
-
-  if ((file = fopen(filename, "w")) == NULL)
-  {
-    printf("Can't open the file %s\n", filename);
-    exit(1);
-  }
-
-  //Write header for ppm image file
-  fprintf(file, "P3\n");
-  fprintf(file, "%lu %lu\n255\n", image_width, image_height);
-
-  //Initialize pixels
-  int image_buffer_length = image_width * image_height;
-  uint8_t *image_buffer = (uint8_t *)malloc(sizeof(uint8_t) * image_buffer_length);
-
-  //Initialize data pixels
-  int pixels_count =
-      (image_height / pixel_size) * (image_width / pixel_size);
-  uint8_t *pixels = (uint8_t *)malloc(sizeof(uint8_t) * pixels_count);
+  IMAGE* image = image_create(image_width, image_height);
 
   //Initialize random nums generator
   srand(time(NULL));
 
-  //Fill the array of data pixels
-  while (--pixels_count)
-    pixels[pixels_count] = rand() % 255;
-
   //Fill the image buffer based on array of pixels
-  for (int x = 0; x < image_width; x++)
-    for (int y = 0; y < image_height; y++)
-      image_buffer[(y * image_width) + x] = pixels[((y / pixel_size) * (image_width / pixel_size)) + (x / pixel_size)];
+  for (int x = 0; x < image_width / pixel_size; x++)
+    for (int y = 0; y < image_height / pixel_size; y++)
+      image_set_pixel_range(image, x * pixel_size, y * pixel_size, (x + 1) * pixel_size - 1, (y + 1) * pixel_size - 1, rand() % 256);
+  
+  image_save(image, filename);
 
-  //Write the image buffer to the file
-  for (int i = 0; i < image_buffer_length; i++)
-    fprintf(file, "%d %d %d\n", image_buffer[i], image_buffer[i], image_buffer[i]);
-
-  fclose(file);
+  return 0;
 }
