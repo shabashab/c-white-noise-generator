@@ -61,8 +61,18 @@ int main(int argc, char **argv)
 
   //Fill the image buffer based on array of pixels
   for (int x = 0; x < image_width / pixel_size; x++)
+  {
     for (int y = 0; y < image_height / pixel_size; y++)
-      image_set_pixel_range(image, x * pixel_size, y * pixel_size, (x + 1) * pixel_size - 1, (y + 1) * pixel_size - 1, rand() % 256);
+    {
+      int x_from = x * pixel_size;
+      int y_from = y * pixel_size;
+      int x_to = (x + 1) * pixel_size - 1;
+      int y_to = (y + 1) * pixel_size - 1;
+
+      image_set_pixel_range(image, x_from, y_from, x_to, y_to, rand() % 256);
+    }
+  }
+
 
   image_save(image, filename);
 

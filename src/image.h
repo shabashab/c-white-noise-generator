@@ -18,7 +18,7 @@ void image_save(IMAGE *image, char *filename);
 #ifndef IMAGE_IMPL
 #define IMAGE_IMPL
 
-void fatal(char *message)
+void fatal(const char *message)
 {
   printf("%s\n", message);
   exit(1);
@@ -50,7 +50,7 @@ void image_save(IMAGE *image, char *filename)
 {
   FILE *file = fopen(filename, "w");
 
-  if (file < 0)
+  if (!file)
     fatal("Can't open file");
 
   //Write image headers
