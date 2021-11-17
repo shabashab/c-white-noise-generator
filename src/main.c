@@ -54,7 +54,7 @@ int main(int argc, char **argv)
     }
   }
 
-  IMAGE* image = image_create(image_width, image_height);
+  IMAGE *image = image_create(image_width, image_height);
 
   //Initialize random nums generator
   srand(time(NULL));
@@ -63,7 +63,7 @@ int main(int argc, char **argv)
   for (int x = 0; x < image_width / pixel_size; x++)
     for (int y = 0; y < image_height / pixel_size; y++)
       image_set_pixel_range(image, x * pixel_size, y * pixel_size, (x + 1) * pixel_size - 1, (y + 1) * pixel_size - 1, rand() % 256);
-  
+
   image_save(image, filename);
 
   return 0;
